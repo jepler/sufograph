@@ -24,19 +24,40 @@ Curve.prototype.xy = function(phi) {
 
 Curve.prototype.dxy = function(phi, h) {
     h = h || 1e-9
-    var xy0 = xy(phi-h);
-    var xy1 = xy(phi+h);
+    var xy0 = this.xy(phi-h);
+    var xy1 = this.xy(phi+h);
     return [(xy1[0]-xy0[0]) / (2*h), (xy1[1]-xy0[1]) / (2*h)]
+}
+
+Curve.prototype.pathcommand = function() {
+    r = arguments[0]
+    for(var i = 1; i < arguments.length; i++) {
+        if(i > 1) r = r + ","
+        r = r + arguments[i].toFixed(2)
+    }
+    return r;
 }
 
 Curve.prototype.svgpath = function(n) {
     n = n || 32
     var r = ""
+    var ox, oy, odx, ody;
+    var dphi = 2 * Math.PI / n
+    var dmul = .4 * dphi // empirical
     for(var i=0; i<=n; i++) {
         var xy = this.xy(i * 2 * Math.PI / n);
-        var x = xy[0].toFixed(2), y = xy[1].toFixed(2);
-        if(i == 0) r = r + "M" + x + "," + y
-        else r = r + "L" + x + "," + y
+        var x = xy[0], y = xy[1];
+        var dxy = this.dxy(i * 2 * Math.PI / n);
+        var dx = (dmul*dxy[0]), dy = (dmul*dxy[1])
+        if(i == 0) {
+            r = r + this.pathcommand("M", x, y)
+        } else if(i == 1) {
+            r = r + this.pathcommand("c", odx, ody, x-dx-ox, y-dy-oy, x-ox, y-oy)
+        } else {
+            r = r + this.pathcommand("s", x-dx-ox, y-dy-oy, x-ox, y-oy)
+        }
+        odx = dx; ody = dy
+        ox = x; oy = y
     }
     return r
 }

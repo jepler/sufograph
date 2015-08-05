@@ -7,34 +7,98 @@
 <style>
 body { margin: 0; padding: 0; overflow:hidden; }
 svg { display: block; border: 0; position: absolute; top: 0%; left: 0%; width: 100%; height: 100%; background: #fff; }
+table { position: absolute; z-index: 1; }
+@media print { form { display: none; } }
 </style>
 </head>
 <body height="100%">
+<form>
+<table>
+<tr><th colspan="2">Drawn Curve</th></tr>
+<tr><td>m</td><td><input type="number" name="cm" id="cm"/></td></tr>
+<tr><td>n₁</td><td><input type="number" name="cn1" id="cn1"/></td></tr>
+<tr><td>n₂</td><td><input type="number" name="cn2" id="cn2"/></td></tr>
+<tr><td>n₃</td><td><input type="number" name="cn3" id="cn3"/></td></tr>
+<tr><th colspan="2">Translating Curve</th></tr>
+<tr><td>m</td><td><input type="number" name="sm" id="sm"/></td></tr>
+<tr><td>n₁</td><td><input type="number" name="sn1" id="sn1"/></td></tr>
+<tr><td>n₂</td><td><input type="number" name="sn2" id="sn2"/></td></tr>
+<tr><td>n₃</td><td><input type="number" name="sn3" id="sn3"/></td></tr>
+<tr><th colspan="2">Offset Properties</th></tr>
+<tr><td>repetitions</td><td><input type="number" name="n" id="nn"/></td></tr>
+<tr><td>rotations</td><td><input type="number" name="r" id="rr"/></td></tr>
+<tr><td colspan="2"><input type="button" onclick="update()" value="Update"></td></tr>
+</table>
+</form>
 <svg id="s" xpreserveAspectRatio="xMidYMid meet">
 <defs>
-    <path id="p" fill="none" stroke="blue"/>
+    <path id="p" fill="none" stroke="inherit"/>
 </defs>
 <g id="g"/>
- <use xlink:href="#p" fill="none" stroke="blue">
 </svg>
 <script>
 var c = new Curve(1, 1, 3, 5, 18, 18, 100);
-var main = function () {
+var s = new Curve(1, 1, 3, 2, 8, 3, 100);
+var r = 1
+var n = 400
+var main = function (c, s, r, n) {
     document.getElementById("p").setAttribute("d", c.svgpath(128))
-    var bbox = c.bbox(256)
-    bbox[0] *= 1.05
-    bbox[1] *= 1.05
-    bbox[2] *= 1.05
-    bbox[3] *= 1.05
+    var cbbox = c.bbox(256), sbbox = s.bbox(256)
+    var x0 = cbbox[0] + sbbox[0],
+        y0 = cbbox[1] + sbbox[1],
+        x1 = cbbox[2] + sbbox[2],
+        y1 = cbbox[3] + sbbox[3];
+    var dx = x1-x0, dy = y1-y0;
+    x0 -= .05*dx; y0 -= .05*dy
+    dx *= 1.10; dy *= 1.10
     document.getElementById("s").setAttribute("viewBox",
-        fix(bbox[0]) + " " + fix(bbox[1]) + " " + fix(bbox[2] - bbox[0]) + " " + fix(bbox[3] - bbox[1]) )
+        fix(x0) + " " + fix(y0) + " " + fix(dx) + " " + fix(dy) )
     var g = document.getElementById("g")
-    for(var i=0; i<100; i++) {
-        var xy = c.xypathlen(i / 100)
-        g.innerHTML += "<circle cx=\"" + (xy[0].toFixed(2)) + "\" cy=\"" + (xy[1].toFixed(2)) + "\" stroke=\"black\" stroke-width=\"3\" fill=\"red\" r=\"5\"/>"
+    var html = ''
+    for(var i=0; i<n; i++) {
+        var xy = s.xypathlen(i / n);
+        var rr = 360 * r * i / n
+        html += "<use xlink:href=\"#p\" fill=\"none\" stroke=\"black\" transform=\"translate(" + fix(xy[0]) + "," + fix(xy[1]) + ") rotate(" + fix(rr) + ")\"/>"
     }
+    g.innerHTML = html
 }
-main()
+main(c,s,r,n)
+
+var getform = function(id) {
+    return Number(document.getElementById(id).value)
+}
+var putform = function(id, v) {
+    document.getElementById(id).value = v
+}
+
+putform("sm", s.m)
+putform("sn1", s.n1)
+putform("sn2", s.n2)
+putform("sn3", s.n3)
+putform("cm", c.m)
+putform("cn1", c.n1)
+putform("cn2", c.n2)
+putform("cn3", c.n3)
+putform("rr", r)
+putform("nn", n)
+
+
+var update = function() {
+    s.m = getform("sm")
+    s.n1 = getform("sn1")
+    s.n2 = getform("sn2")
+    s.n3 = getform("sn3")
+    c.m = getform("cm")
+    c.n1 = getform("cn1")
+    c.n2 = getform("cn2")
+    c.n3 = getform("cn3")
+    r = getform("rr")
+    n = getform("nn")
+    main(c, s, r, n)
+}
+
 </script>
+
+</div>
 </body>
 </html>

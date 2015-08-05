@@ -18,7 +18,7 @@ Curve.prototype.r = function(phi) {
 }
 
 Curve.prototype.xy = function(phi) {
-    r = this.r(phi);
+    var r = this.r(phi);
     return [r * Math.cos(phi), r * Math.sin(phi)]
 }
 
@@ -30,7 +30,7 @@ Curve.prototype.dxy = function(phi, h) {
 }
 
 Curve.prototype.pathcommand = function() {
-    r = arguments[0]
+    var r = arguments[0]
     for(var i = 1; i < arguments.length; i++) {
         if(i > 1) r = r + ","
         r = r + arguments[i].toFixed(2)

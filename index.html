@@ -19,18 +19,23 @@ table { position: absolute; z-index: 1; }
 <tr><td>n₁</td><td><input type="number" name="cn1" id="cn1"/></td></tr>
 <tr><td>n₂</td><td><input type="number" name="cn2" id="cn2"/></td></tr>
 <tr><td>n₃</td><td><input type="number" name="cn3" id="cn3"/></td></tr>
+<tr><td>scale</td><td><input type="number" name="cscale" id="cscale"/></td></tr>
 <tr><th colspan="2">Translating Curve</th></tr>
 <tr><td>m</td><td><input type="number" name="sm" id="sm"/></td></tr>
 <tr><td>n₁</td><td><input type="number" name="sn1" id="sn1"/></td></tr>
 <tr><td>n₂</td><td><input type="number" name="sn2" id="sn2"/></td></tr>
 <tr><td>n₃</td><td><input type="number" name="sn3" id="sn3"/></td></tr>
+<tr><td>scale</td><td><input type="number" name="sscale" id="sscale"/></td></tr>
 <tr><th colspan="2">Offset Properties</th></tr>
 <tr><td>repetitions</td><td><input type="number" name="n" id="nn"/></td></tr>
 <tr><td>rotations</td><td><input type="number" name="r" id="rr"/></td></tr>
-<tr><td colspan="2"><input type="button" onclick="update()" value="Update"></td></tr>
+<tr><td><input type="button" onclick="update()" value="Update"></td><td><a id="view">View</a> or <a download="sufo.svg" id="dl">Download SVG</a></tr>
+<tr><th colspan="2">What is …</th></td>
+<tr><th colspan="2"><a href="https://en.wikipedia.org/wiki/Superformula">Superformula</a></td></tr>
+<tr><th colspan="2"><a href="https://en.wikipedia.org/wiki/Guilloch%C3%A9">Guilloché</a></td></tr>
 </table>
 </form>
-<svg id="s" xpreserveAspectRatio="xMidYMid meet">
+<svg id="s" preserveAspectRatio="xMidYMid meet">
 <defs>
     <path id="p" fill="none" stroke="inherit"/>
 </defs>
@@ -40,14 +45,14 @@ table { position: absolute; z-index: 1; }
 var c = new Curve(1, 1, 3, 5, 18, 18, 100);
 var s = new Curve(1, 1, 3, 2, 8, 3, 100);
 var r = 1
-var n = 400
+var n = 200
 var main = function (c, s, r, n) {
     document.getElementById("p").setAttribute("d", c.svgpath(128))
-    var cbbox = c.bbox(256), sbbox = s.bbox(256)
-    var x0 = cbbox[0] + sbbox[0],
-        y0 = cbbox[1] + sbbox[1],
-        x1 = cbbox[2] + sbbox[2],
-        y1 = cbbox[3] + sbbox[3];
+    var cmr = c.maxr(256), sbbox = s.bbox(256)
+    var x0 = sbbox[0] - cmr,
+        y0 = sbbox[1] - cmr,
+        x1 = sbbox[2] + cmr,
+        y1 = sbbox[3] + cmr;
     var dx = x1-x0, dy = y1-y0;
     x0 -= .05*dx; y0 -= .05*dy
     dx *= 1.10; dy *= 1.10
@@ -55,45 +60,80 @@ var main = function (c, s, r, n) {
         fix(x0) + " " + fix(y0) + " " + fix(dx) + " " + fix(dy) )
     var g = document.getElementById("g")
     var html = ''
+    s.preppathlen(4*n)
     for(var i=0; i<n; i++) {
         var xy = s.xypathlen(i / n);
         var rr = 360 * r * i / n
         html += "<use xlink:href=\"#p\" fill=\"none\" stroke=\"black\" transform=\"translate(" + fix(xy[0]) + "," + fix(xy[1]) + ") rotate(" + fix(rr) + ")\"/>"
     }
     g.innerHTML = html
+    var svg = document.getElementById("s")
+    var pre = ("<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" "
+              + "xmlns:xlink=\"http://www.w3.org/1999/xlink\" viewBox=\""
+              + svg.getAttribute('viewBox') +"\" preserveAspectRatio=\"xMidYMid meet\">")
+    var post = "</svg>"
+    document.getElementById("dl").setAttribute("href", todatauri(pre + svg.innerHTML + post, "image/svg+xml"))
+    document.getElementById("view").setAttribute("href", todatauri(pre + svg.innerHTML + post, "image/svg+xml"))
 }
+
+var urlParams;
+(window.onpopstate = function () {
+    var match,
+        pl     = /\+/g,  // Regex for replacing addition symbol with a space
+        search = /([^&=]+)=?([^&]*)/g,
+        decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); },
+        query  = window.location.hash.substring(1);
+
+    urlParams = {};
+    while (match = search.exec(query))
+       urlParams[decode(match[1])] = decode(match[2]);
+})();
+
+var getform_putquery = function(id) {
+    var v = Number(document.getElementById(id).value)
+    urlParams[id] = v
+    var hash = ""
+    for(var k in urlParams) {
+        if(hash) hash += "\x26"
+        hash += k + "=" + urlParams[k]
+    }
+    document.location.hash = hash // (does not call onpopstate as side effect)
+    return v;
+}
+var getquery_putform = function(id, v) {
+    v = Number(urlParams[id] || v)
+    document.getElementById(id).value = v
+    return v
+}
+
+s.m = getquery_putform("sm", s.m)
+s.n1 = getquery_putform("sn1", s.n1)
+s.n2 = getquery_putform("sn2", s.n2)
+s.n3 = getquery_putform("sn3", s.n3)
+s.scale = getquery_putform("sscale", s.scale)
+c.m = getquery_putform("cm", c.m)
+c.n1 = getquery_putform("cn1", c.n1)
+c.n2 = getquery_putform("cn2", c.n2)
+c.n3 = getquery_putform("cn3", c.n3)
+c.scale = getquery_putform("cscale", c.scale)
+r = getquery_putform("rr", r)
+n = getquery_putform("nn", n)
+
 main(c,s,r,n)
 
-var getform = function(id) {
-    return Number(document.getElementById(id).value)
-}
-var putform = function(id, v) {
-    document.getElementById(id).value = v
-}
-
-putform("sm", s.m)
-putform("sn1", s.n1)
-putform("sn2", s.n2)
-putform("sn3", s.n3)
-putform("cm", c.m)
-putform("cn1", c.n1)
-putform("cn2", c.n2)
-putform("cn3", c.n3)
-putform("rr", r)
-putform("nn", n)
-
-
 var update = function() {
-    s.m = getform("sm")
-    s.n1 = getform("sn1")
-    s.n2 = getform("sn2")
-    s.n3 = getform("sn3")
-    c.m = getform("cm")
-    c.n1 = getform("cn1")
-    c.n2 = getform("cn2")
-    c.n3 = getform("cn3")
-    r = getform("rr")
-    n = getform("nn")
+    s.m = getform_putquery("sm")
+    s.n1 = getform_putquery("sn1")
+    s.n2 = getform_putquery("sn2")
+    s.n3 = getform_putquery("sn3")
+    s.scale = getform_putquery("sscale")
+    c.m = getform_putquery("cm")
+    c.n1 = getform_putquery("cn1")
+    c.n2 = getform_putquery("cn2")
+    c.n3 = getform_putquery("cn3")
+    c.scale = getform_putquery("cscale")
+    r = getform_putquery("rr")
+    n = getform_putquery("nn")
     main(c, s, r, n)
 }
 

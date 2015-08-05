@@ -76,6 +76,16 @@ Curve.prototype.bbox = function(n) {
     return [x0, y0, x1, y1]
 }
 
+Curve.prototype.maxr = function(n) {
+    n = n || 32
+    var mr = 0
+    for(var i=0; i<n; i++) {
+        var r = this.r(i * 2 * Math.PI / n);
+        if(r > mr) mr = r
+    }
+    return mr
+}
+
 Curve.prototype.tosvg = function(n, props) {
     var path = this.svgpath(n);
     var bbox = this.bbox()

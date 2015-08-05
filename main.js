@@ -91,3 +91,34 @@ Curve.prototype.tosvgdatauri = function(n, props) {
     var svg = this.tosvg(n, props)
     return todatauri(svg, "image/svg+xml")
 }
+
+Curve.prototype.preppathlen = function(n) {
+    n = n || 512
+    this.cl = [0];
+    var l = 0;
+    var oxy = this.xy(0)
+    for(var i=1; i<=n; i++) {
+        var phi = i * 2 * Math.PI / n;
+        var xy = this.xy(phi)
+        this.cl.push(l += Math.hypot(xy[0] - oxy[0], xy[1] - oxy[1]))
+        oxy = xy
+    }
+    for(var i=1; i<=n; i++) {
+        this.cl[i] /= l
+    }
+    this.ol = 0
+    this.oi = 0
+}
+
+Curve.prototype.xypathlen = function(l) {
+    this.cl || this.preppathlen()
+    if(l < this.ol) { this.oi = 0 }
+    this.ol = l
+    while(l > this.cl[this.oi]) this.oi++;
+    var dlen = this.cl[this.oi + 1] - this.cl[this.oi];
+    var dt = l - this.cl[this.oi];
+    var dphi = 2 * Math.PI / (this.cl.length - 1)
+    var phi = dphi * (this.oi + dt/dlen)
+    console.log(l + " " + phi + " " + this.oi + " " + dlen)
+    return this.xy(phi)
+}

@@ -6,19 +6,35 @@
 <script type="text/javascript" src="main.js"></script>
 <style>
 body { margin: 0; padding: 0; overflow:hidden; }
-svg { display: block; border: 1px solid #ccc; position: absolute; top: 1%; left: 1%; width: 98%; height: 98%; background: #fff; }
+svg { display: block; border: 0; position: absolute; top: 0%; left: 0%; width: 100%; height: 100%; background: #fff; }
 </style>
 </head>
 <body height="100%">
-<svg id="g" xpreserveAspectRatio="xMidYMid meet">
+<svg id="s" xpreserveAspectRatio="xMidYMid meet">
+<defs>
     <path id="p" fill="none" stroke="blue"/>
+</defs>
+<g id="g"/>
+ <use xlink:href="#p" fill="none" stroke="blue">
 </svg>
 <script>
 var c = new Curve(1, 1, 3, 5, 18, 18, 100);
-document.getElementById("p").setAttribute("d", c.svgpath(128))
-var bbox = c.bbox(256)
-document.getElementById("g").setAttribute("viewBox",
-    fix(bbox[0]) + " " + fix(bbox[1]) + " " + fix(bbox[2] - bbox[0]) + " " + fix(bbox[3] - bbox[1]) )
+var main = function () {
+    document.getElementById("p").setAttribute("d", c.svgpath(128))
+    var bbox = c.bbox(256)
+    bbox[0] *= 1.05
+    bbox[1] *= 1.05
+    bbox[2] *= 1.05
+    bbox[3] *= 1.05
+    document.getElementById("s").setAttribute("viewBox",
+        fix(bbox[0]) + " " + fix(bbox[1]) + " " + fix(bbox[2] - bbox[0]) + " " + fix(bbox[3] - bbox[1]) )
+    var g = document.getElementById("g")
+    for(var i=0; i<100; i++) {
+        var xy = c.xypathlen(i / 100)
+        g.innerHTML += "<circle cx=\"" + (xy[0].toFixed(2)) + "\" cy=\"" + (xy[1].toFixed(2)) + "\" stroke=\"black\" stroke-width=\"3\" fill=\"red\" r=\"5\"/>"
+    }
+}
+main()
 </script>
 </body>
 </html>

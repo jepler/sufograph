@@ -8,10 +8,13 @@
 body { margin: 0; padding: 0; overflow:hidden; }
 svg { display: block; border: 0; position: absolute; top: 0%; left: 0%; width: 100%; height: 100%; background: #fff; }
 table { position: absolute; z-index: 1; }
-@media print { form { display: none; } }
+#showhide { position: absolute; z-index: 2; }
+body.hide form { display: none; }
+@media print { form, #showhide { display: none; } }
 </style>
 </head>
-<body height="100%">
+<body height="100%" id="body">
+<div id="showhide" onclick="toggleshowhide()"></div>
 <form>
 <table>
 <tr><th colspan="2">Drawn Curve</th></tr>
@@ -92,6 +95,10 @@ var urlParams;
 var getform_putquery = function(id) {
     var v = Number(document.getElementById(id).value)
     urlParams[id] = v
+    updatequery()
+}
+
+var updatequery = function() {
     var hash = ""
     for(var k in urlParams) {
         if(hash) hash += "\x26"
@@ -136,6 +143,22 @@ var update = function() {
     n = getform_putquery("nn")
     main(c, s, r, n)
 }
+
+var showstate = Number(urlParams['ui']) || 1;
+
+var syncshowstate = function() {
+    if(showstate) { document.getElementById("body").setAttribute("class", ""); document.getElementById("showhide").innerHTML = "«"; }
+    else { document.getElementById("body").setAttribute("class", "hide"); document.getElementById("showhide").innerHTML = "»"; }
+}
+
+var toggleshowhide = function() {
+    showstate = !showstate
+    urlParams["ui"] = showstate
+    syncshowstate();
+    updatequery();
+}
+
+syncshowstate();
 
 </script>
 

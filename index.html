@@ -32,6 +32,7 @@ body.hide form { display: none; }
 <tr><th colspan="2">Offset Properties</th></tr>
 <tr><td>repetitions</td><td><input type="number" name="n" id="nn"/></td></tr>
 <tr><td>rotations</td><td><input type="number" name="r" id="rr"/></td></tr>
+<tr><td>show paths</td><td><input type="checkbox" name="showpath" id="showpath"/></td></tr>
 <tr><td><input type="button" onclick="update()" value="Update"></td><td><a id="view">View</a> or <a download="sufo.svg" id="dl">Download SVG</a></tr>
 <tr><th colspan="2">What is …</th></td>
 <tr><th colspan="2"><a href="https://en.wikipedia.org/wiki/Superformula">Superformula</a></td></tr>
@@ -43,12 +44,14 @@ body.hide form { display: none; }
     <path id="p" fill="none" stroke="inherit"/>
 </defs>
 <g id="g"/>
+<g id="h" stroke-width="3px"/>
 </svg>
 <script>
 var c = new Curve(1, 1, 3, 5, 18, 18, 100);
 var s = new Curve(1, 1, 3, 2, 8, 3, 100);
 var r = 1
 var n = 200
+var showpath = 0
 var main = function (c, s, r, n) {
     document.getElementById("p").setAttribute("d", c.svgpath(128))
     var cmr = c.maxr(256), sbbox = s.bbox(256)
@@ -70,6 +73,18 @@ var main = function (c, s, r, n) {
         html += "<use xlink:href=\"#p\" fill=\"none\" stroke=\"black\" transform=\"translate(" + fix(xy[0]) + "," + fix(xy[1]) + ") rotate(" + fix(rr) + ")\"/>"
     }
     g.innerHTML = html
+    if(showpath) {
+        var sxy = s.xypathlen(0);
+        var cxy = c.xypathlen(0);
+        document.getElementById("h") .innerHTML = (
+            "<use transform=\"translate(" + fix(cxy[0]) + "," + fix(cxy[1]) +")\"xlink:href=\"#p\" fill=\"none\" stroke=\"blue\"/>"
+            + "<path  fill=\"none\" stroke=\"red\" d=\"" + s.svgpath(128) + "\"/>"
+            + "<line x1=\"" + fix(sxy[0]) + "\" y1=\"" + fix(sxy[1]) + "\" x2=\"" + fix(cxy[0]+sxy[0]) + "\" y2=\"" + fix(cxy[1]+sxy[1]) + "\" stroke=\"green\">"
+        )
+    } else
+        document.getElementById("h") .innerHTML = ""
+        
+
     var svg = document.getElementById("s")
     var pre = ("<svg xmlns=\"http://www.w3.org/2000/svg\" version=\"1.1\" "
               + "xmlns:xlink=\"http://www.w3.org/1999/xlink\" viewBox=\""
@@ -93,9 +108,17 @@ var urlParams;
 })();
 
 var getform_putquery = function(id) {
-    var v = Number(document.getElementById(id).value)
+    var el = document.getElementById(id)
+    var v;
+    if(el.type == "checkbox") {
+        console.log("getform_putquery checkbox " + el.checked + " " + +el.checked)
+        v = +el.checked;
+    } else {
+        v = Number(document.getElementById(id).value)
+    }
     urlParams[id] = v
     updatequery()
+    return v;
 }
 
 var updatequery = function() {
@@ -105,11 +128,15 @@ var updatequery = function() {
         hash += k + "=" + urlParams[k]
     }
     document.location.hash = hash // (does not call onpopstate as side effect)
-    return v;
 }
 var getquery_putform = function(id, v) {
     v = Number(urlParams[id] || v)
-    document.getElementById(id).value = v
+    var el = document.getElementById(id)
+    if(el.type == "checkbox") {
+        el.checked = v;
+    } else {
+        el.value = v
+    }
     return v
 }
 
@@ -125,6 +152,7 @@ c.n3 = getquery_putform("cn3", c.n3)
 c.scale = getquery_putform("cscale", c.scale)
 r = getquery_putform("rr", r)
 n = getquery_putform("nn", n)
+showpath = getquery_putform("showpath", showpath)
 
 main(c,s,r,n)
 
@@ -141,6 +169,7 @@ var update = function() {
     c.scale = getform_putquery("cscale")
     r = getform_putquery("rr")
     n = getform_putquery("nn")
+    showpath = getform_putquery("showpath")
     main(c, s, r, n)
 }
 

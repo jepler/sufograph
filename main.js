@@ -129,6 +129,5 @@ Curve.prototype.xypathlen = function(l) {
     var dt = l - this.cl[this.oi];
     var dphi = 2 * Math.PI / (this.cl.length - 1)
     var phi = dphi * (this.oi + dt/dlen)
-    console.log(l + " " + phi + " " + this.oi + " " + dlen)
     return this.xy(phi)
 }

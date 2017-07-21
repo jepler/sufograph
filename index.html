@@ -39,7 +39,7 @@ body.hide form { display: none; }
 <tr><th colspan="2"><a href="https://en.wikipedia.org/wiki/Guilloch%C3%A9">Guilloché</a></td></tr>
 </table>
 </form>
-<svg id="s" preserveAspectRatio="xMidYMid meet">
+<svg id="s" preserveAspectRatio="xMaxYMid meet">
 <defs>
     <path id="p" fill="none" stroke="inherit"/>
 </defs>
@@ -77,7 +77,7 @@ var main = function (c, s, r, n) {
         var sxy = s.xypathlen(0);
         var cxy = c.xypathlen(0);
         document.getElementById("h") .innerHTML = (
-            "<use transform=\"translate(" + fix(cxy[0]) + "," + fix(cxy[1]) +")\"xlink:href=\"#p\" fill=\"none\" stroke=\"blue\"/>"
+            "<use transform=\"translate(" + fix(sxy[0]) + "," + fix(sxy[1]) +")\"xlink:href=\"#p\" fill=\"none\" stroke=\"blue\"/>"
             + "<path  fill=\"none\" stroke=\"red\" d=\"" + s.svgpath(128) + "\"/>"
             + "<line x1=\"" + fix(sxy[0]) + "\" y1=\"" + fix(sxy[1]) + "\" x2=\"" + fix(cxy[0]+sxy[0]) + "\" y2=\"" + fix(cxy[1]+sxy[1]) + "\" stroke=\"green\">"
         )
@@ -111,8 +111,7 @@ var getform_putquery = function(id) {
     var el = document.getElementById(id)
     var v;
     if(el.type == "checkbox") {
-        console.log("getform_putquery checkbox " + el.checked + " " + +el.checked)
-        v = +el.checked;
+        v = el.checked;
     } else {
         v = Number(document.getElementById(id).value)
     }
@@ -133,7 +132,7 @@ var getquery_putform = function(id, v) {
     v = Number(urlParams[id] || v)
     var el = document.getElementById(id)
     if(el.type == "checkbox") {
-        el.checked = v;
+        el.checked = v == "true";
     } else {
         el.value = v
     }
@@ -173,7 +172,7 @@ var update = function() {
     main(c, s, r, n)
 }
 
-var showstate = Number(urlParams['ui']) || 1;
+var showstate = (urlParams['ui'] || "true") == "true";
 
 var syncshowstate = function() {
     if(showstate) { document.getElementById("body").setAttribute("class", ""); document.getElementById("showhide").innerHTML = "«"; }

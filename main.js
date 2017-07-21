@@ -17,6 +17,17 @@ Curve.prototype.r = function(phi) {
             -1/this.n1)
 }
 
+Curve.prototype.max_phi = function() {
+    return 2 * Math.PI
+    // the period of the curve is only 2pi when n2==n3
+    // otherwise, it's 4.  when n2*n3 > 0, the path joins up at 2pi
+    // but with a curvature discontinuity at the join.
+    // should make it optional to draw the full 4pi curve, I don't want
+    // to ruin old spiral and rosette-with-stem drawings
+    if(this.n2 == this.n3) return 2 * Math.PI
+    return 4 * Math.PI
+}
+
 Curve.prototype.xy = function(phi) {
     var r = this.r(phi);
     return [r * Math.cos(phi), r * Math.sin(phi)]
@@ -45,9 +56,9 @@ Curve.prototype.svgpath = function(n) {
     var dphi = 2 * Math.PI / n
     var dmul = .4 * dphi // empirical
     for(var i=0; i<=n; i++) {
-        var xy = this.xy(i * 2 * Math.PI / n);
+        var xy = this.xy(i * this.max_phi() / n);
         var x = xy[0], y = xy[1];
-        var dxy = this.dxy(i * 2 * Math.PI / n);
+        var dxy = this.dxy(i * this.max_phi() / n);
         var dx = (dmul*dxy[0]), dy = (dmul*dxy[1])
         if(i == 0) {
             r = r + this.pathcommand("M", x, y)
@@ -66,7 +77,7 @@ Curve.prototype.bbox = function(n) {
     n = n || 32
     var x0 = 0, y0 = 0, x1 = 0, y1 = 0
     for(var i=0; i<n; i++) {
-        var xy = this.xy(i * 2 * Math.PI / n);
+        var xy = this.xy(i * this.max_phi() / n);
         var x = xy[0], y = xy[1]
         if(x < x0) x0 = x
         if(x > x1) x1 = x
@@ -80,7 +91,7 @@ Curve.prototype.maxr = function(n) {
     n = n || 32
     var mr = 0
     for(var i=0; i<n; i++) {
-        var r = this.r(i * 2 * Math.PI / n);
+        var r = this.r(i * this.max_phi() / n);
         if(r > mr) mr = r
     }
     return mr
@@ -108,14 +119,15 @@ Curve.prototype.preppathlen = function(n) {
     var l = 0;
     var oxy = this.xy(0)
     for(var i=1; i<=n; i++) {
-        var phi = i * 2 * Math.PI / n;
+        var phi = i * this.max_phi() / n;
         var xy = this.xy(phi)
         this.cl.push(l += Math.hypot(xy[0] - oxy[0], xy[1] - oxy[1]))
         oxy = xy
     }
-    for(var i=1; i<=n; i++) {
-        this.cl[i] /= l
-    }
+    if(l)
+        for(var i=1; i<=n; i++) {
+            this.cl[i] /= l
+        }
     this.ol = 0
     this.oi = 0
 }
@@ -127,7 +139,7 @@ Curve.prototype.xypathlen = function(l) {
     while(l > this.cl[this.oi]) this.oi++;
     var dlen = this.cl[this.oi + 1] - this.cl[this.oi];
     var dt = l - this.cl[this.oi];
-    var dphi = 2 * Math.PI / (this.cl.length - 1)
+    var dphi = this.max_phi() / (this.cl.length - 1)
     var phi = dphi * (this.oi + dt/dlen)
     return this.xy(phi)
 }
